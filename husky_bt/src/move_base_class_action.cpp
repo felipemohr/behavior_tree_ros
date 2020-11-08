@@ -6,7 +6,7 @@
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
 class MoveBase {
-  private:
+  protected:
     MoveBaseClient ac_;
   
   public:

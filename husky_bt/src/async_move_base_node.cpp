@@ -4,19 +4,6 @@
 #include "move_base_msgs/MoveBaseAction.h"
 #include "geometry_msgs/Pose.h"
 
-
-static const char* xml_text = R"(
-  <root>
-    <BehaviorTree>
-      <Sequence>
-        <MoveBase pose="-3 2 0 0 0 0 1"/>
-        <MoveBase pose="1 1 0 0 0 0 1"/>
-      </Sequence>
-    </BehaviorTree>
-  </root>
-)";
-
-
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
 namespace BT {
@@ -44,32 +31,33 @@ class MoveBaseAction : public BT::AsyncActionNode {
   public:
     MoveBaseAction(const std::string &name, const BT::NodeConfiguration &config)
       : BT::AsyncActionNode(name, config), ac_("move_base", true) {
-      ROS_INFO("Waiting for action server to start.");
-      ac_.waitForServer();
     }
 
     static BT::PortsList providedPorts() {
       return {BT::InputPort<geometry_msgs::Pose>("pose")};
     }
 
-    BT::NodeStatus tick() override;
+    virtual BT::NodeStatus tick() override;
 
-    void halt() override {
-      _halt_requested.store(true);
-    }
-    void doneCB(const actionlib::SimpleClientGoalState& state) {
-      ROS_INFO("MoveBase action finished in state [%s]", state.toString().c_str());
-      ros::shutdown();
+    virtual void halt() override {
+      _halt_requested = true;
     }
 
   private:
-    std::atomic_bool _halt_requested;
+    bool _halt_requested;
     MoveBaseClient ac_;
 
 
 };
 
 BT::NodeStatus MoveBaseAction::tick() {
+  
+  ROS_INFO("Waiting for action server to start.");
+  if (!ac_.waitForServer(ros::Duration(2.0))) {
+    ROS_ERROR("Can't contact move base server");
+    return BT::NodeStatus::FAILURE;
+  }
+  
   geometry_msgs::Pose pose;
   if(!getInput<geometry_msgs::Pose>("pose", pose))
     throw BT::RuntimeError("Missing required input [pose]");
@@ -80,18 +68,26 @@ BT::NodeStatus MoveBaseAction::tick() {
   goal.target_pose.pose = pose;
 
   ROS_INFO("Sending goal to action server.");
-  ac_.sendGoal(goal,
-                boost::bind(&MoveBaseAction::doneCB, this, _1),
-                MoveBaseClient::SimpleActiveCallback(),
-                MoveBaseClient::SimpleFeedbackCallback());
+  ac_.sendGoal(goal);
 
   ROS_INFO("[ MoveBase: STARTED ]. goal: x=%.1f y=%.1f\n", pose.position.x, pose.position.y);
-  _halt_requested.store(false);
+  _halt_requested = false;
 
-  while(!_halt_requested && ros::ok()) { }
+  while(!_halt_requested && !ac_.waitForResult(ros::Duration(0.02))) { }
 
-  ROS_INFO("ModeBase: FINISHED");
-  return _halt_requested ? BT::NodeStatus::FAILURE : BT::NodeStatus::SUCCESS;
+  if (_halt_requested) {
+    ac_.cancelAllGoals();
+    ROS_ERROR("MoveBase aborted");
+    return BT::NodeStatus::FAILURE;
+  }
+
+  if (ac_.getState() != actionlib::SimpleClientGoalState::SUCCEEDED) {
+    ROS_ERROR("MoveBase failed");
+    return BT::NodeStatus::FAILURE;
+  }
+
+  ROS_INFO("ModeBase: FINISHED. Target reached");
+  return BT::NodeStatus::SUCCESS;
 }
 
 
@@ -102,7 +98,7 @@ int main(int argc, char** argv) {
   BT::BehaviorTreeFactory factory;
   factory.registerNodeType<MoveBaseAction>("MoveBase");
 
-  auto tree = factory.createTreeFromText(xml_text);
+  auto tree = factory.createTreeFromFile("src/behavior_tree_ros/husky_bt/src/move_base_tree.xml");
 
   BT::NodeStatus status = BT::NodeStatus::RUNNING;
 
