@@ -1,7 +1,12 @@
 #include "ros/ros.h"
 #include "actionlib/client/simple_action_client.h"
 #include "move_base_msgs/MoveBaseAction.h"
+#include "tf/transform_datatypes.h"
 #include "geometry_msgs/Pose.h"
+
+struct Pose2D {
+  double x, y, theta;
+};
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
@@ -15,43 +20,17 @@ class MoveBase {
       ac_.waitForServer();
     }
 
-    void GoTo(geometry_msgs::Pose pose, std::string frame_id="map") {
+    void goTo(Pose2D pose, std::string frame_id="map") {
       move_base_msgs::MoveBaseGoal goal;
       goal.target_pose.header.frame_id = frame_id;
       goal.target_pose.header.stamp = ros::Time::now();
-      goal.target_pose.pose = pose;
+      goal.target_pose.pose.position.x = pose.x;
+      goal.target_pose.pose.position.y = pose.y;
+      tf::Quaternion rot = tf::createQuaternionFromYaw(pose.theta);
+      tf::quaternionTFToMsg(rot, goal.target_pose.pose.orientation);
 
       ROS_INFO("Sending goal to action server.");
-      ac_.sendGoal(goal,
-                   boost::bind(&MoveBase::doneCB, this, _1),
-                   MoveBaseClient::SimpleActiveCallback(),
-                   MoveBaseClient::SimpleFeedbackCallback());
-    }
-
-    void doneCB(const actionlib::SimpleClientGoalState& state) {
-      ROS_INFO("MoveBase action finished in state [%s]", state.toString().c_str());
-      //ros::shutdown();
-    }
-
-    actionlib::SimpleClientGoalState getState() {
-      return ac_.getState();
+      ac_.sendGoal(goal);
     }
 
 };
-
-/*
-int main(int argc, char** argv) {
-  ros::init(argc, argv, "move_base_action_node");
-
-  geometry_msgs::Pose pose;
-  pose.position.x = -2;
-  pose.position.y = 2;
-  pose.orientation.w = 1;
-
-  MoveBase mb;
-  mb.GoTo(pose);
-
-  ros::spin();
-  return 0;
-}
-*/

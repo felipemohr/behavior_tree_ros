@@ -214,11 +214,5 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-#add_executable(move_base_class_action src/move_base_class_action.cpp)
-#target_link_libraries(move_base_class_action ${catkin_LIBRARIES})
-
 add_executable(move_base_bt src/move_base_bt.cpp)
 target_link_libraries(move_base_bt BT::behaviortree_cpp_v3 ${catkin_LIBRARIES})
-
-add_executable(async_move_base_node src/async_move_base_node.cpp)
-target_link_libraries(async_move_base_node BT::behaviortree_cpp_v3 ${catkin_LIBRARIES})

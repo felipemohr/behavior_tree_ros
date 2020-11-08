@@ -1,0 +1,9 @@
+<root>
+  <BehaviorTree>
+    <Sequence>
+      <MoveBase pose="-3 2 0"/>
+      <MoveBase pose="1 3 0 "/>
+      <MoveBase pose="-5 -5 0 "/>
+    </Sequence>
+  </BehaviorTree>
+</root>
