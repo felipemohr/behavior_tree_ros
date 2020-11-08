@@ -10,7 +10,9 @@
                 "/opt/ros/melodic/share/husky/husky_base/include/**",
                 "/home/felipe/bt_ros_ws/src/behavior_tree_ros/husky_bt/include/**",
                 "/opt/ros/melodic/share/julius/include/**",
-                "/usr/include/**"
+                "/usr/include/**",
+                "${workspaceFolder}/**",
+                "~/BehaviorTree.CPP/include"
             ],
             "name": "ROS",
             "intelliSenseMode": "gcc-x64",

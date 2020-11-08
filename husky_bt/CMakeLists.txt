@@ -1,5 +1,10 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.5)
+
 project(husky_bt)
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+find_package(BehaviorTreeV3)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -209,8 +214,11 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-add_executable(move_circles src/move_circles.cpp)
-target_link_libraries(move_circles ${catkin_LIBRARIES})
+#add_executable(move_base_class_action src/move_base_class_action.cpp)
+#target_link_libraries(move_base_class_action ${catkin_LIBRARIES})
 
-add_executable(move_base_action src/move_base_action.cpp)
-target_link_libraries(move_base_action ${catkin_LIBRARIES})
+add_executable(move_base_bt src/move_base_bt.cpp)
+target_link_libraries(move_base_bt BT::behaviortree_cpp_v3 ${catkin_LIBRARIES})
+
+add_executable(async_move_base_node src/async_move_base_node.cpp)
+target_link_libraries(async_move_base_node BT::behaviortree_cpp_v3 ${catkin_LIBRARIES})
