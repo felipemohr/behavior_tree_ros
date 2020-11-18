@@ -1,16 +1,9 @@
 #!/usr/bin/env python
-
-
-
-
-
 import roslib; 
 import rospy
 import smach
 import smach_ros
 import os
-
-
 
 from gazebo_msgs.srv import (
     SpawnModel,
@@ -23,15 +16,9 @@ from sensor_msgs.msg import JointState
 
 import struct
 
-
-
 import rospy
 
-
-
 from std_msgs.msg import Header
-
-
 
 from baxter_core_msgs.srv import (
     SolvePositionIK,

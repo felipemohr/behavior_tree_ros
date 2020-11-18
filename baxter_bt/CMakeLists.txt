@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(baxter_bt)
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+find_package(BehaviorTreeV3)
+
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 
@@ -10,6 +14,12 @@ project(baxter_bt)
 find_package(catkin REQUIRED COMPONENTS
   actionlib
   roscpp
+  behaviortree_cpp_v3
+  baxter_core_msgs
+  trajectory_msgs
+  actionlib_msgs
+  genmsg
+  std_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -60,17 +70,14 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
+add_action_files(
+  DIRECTORY action FILES BaxterJointCommand.action
+)
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+generate_messages(
+  DEPENDENCIES std_msgs actionlib_msgs trajectory_msgs baxter_core_msgs # Or other packages containing msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -203,3 +210,6 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+add_executable(pick_and_place_bt src/pick_and_place_bt.cpp)
+target_link_libraries(pick_and_place_bt BT::behaviortree_cpp_v3 ${catkin_LIBRARIES})

@@ -12,7 +12,8 @@
                 "/opt/ros/kinetic/share/julius/include/**",
                 "/usr/include/**",
                 "${workspaceFolder}/**",
-                "~/BehaviorTree.CPP/include"
+                "~/BehaviorTree.CPP/include",
+                "/home/felipe/baxter_ws/src/**"
             ],
             "name": "ROS",
             "intelliSenseMode": "gcc-x64",
