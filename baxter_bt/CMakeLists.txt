@@ -18,7 +18,6 @@ find_package(catkin REQUIRED COMPONENTS
   baxter_core_msgs
   trajectory_msgs
   actionlib_msgs
-  genmsg
   std_msgs
 )
 
@@ -70,14 +69,14 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate actions in the 'action' folder
-add_action_files(
-  DIRECTORY action FILES BaxterJointCommand.action
-)
+# add_action_files(
+#   DIRECTORY action FILES BaxterJointCommand.action
+# )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES std_msgs actionlib_msgs trajectory_msgs baxter_core_msgs # Or other packages containing msgs
-)
+# generate_messages(
+#   DEPENDENCIES std_msgs actionlib_msgs trajectory_msgs baxter_core_msgs # Or other packages  containing msgs
+# )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##

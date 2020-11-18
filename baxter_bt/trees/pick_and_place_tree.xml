@@ -1,0 +1,9 @@
+<root>
+  <BehaviorTree>
+    <Sequence>
+      <MoveJoint commands="0.1 -0.99998 -1.18997 1.94002 0.67 1.03001 -0.5"/>
+      <MoveJoint commands="0.0 0.0 0.0 0.0 0.0 0.0 0.0"/>
+      <MoveJoint commands="1.0 1.0 1.0 1.0 1.0 1.0 1.0"/>
+    </Sequence>
+  </BehaviorTree>
+</root>
