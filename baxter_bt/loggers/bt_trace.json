@@ -1,0 +1,16 @@
+{"traceEvents":[
+{"cat":"Control","pid":0,"tid":-1086232704,"ts":1050,"ph":"B","name":"Sequence","args":{}},
+{"cat":"Action","pid":0,"tid":-1086232704,"ts":1141,"ph":"B","name":"MoveJoints","args":{}},
+{"cat":"Action","pid":0,"tid":-2030053632,"ts":11317427,"ph":"E","name":"MoveJoints","args":{}},
+{"cat":"Action","pid":0,"tid":-1086232704,"ts":11317589,"ph":"B","name":"SetGripper","args":{}},
+{"cat":"Action","pid":0,"tid":2147481344,"ts":11358872,"ph":"E","name":"SetGripper","args":{}},
+{"cat":"Action","pid":0,"tid":-1086232704,"ts":11359624,"ph":"B","name":"MoveJoints","args":{}},
+{"cat":"Action","pid":0,"tid":-2038446336,"ts":22165095,"ph":"E","name":"MoveJoints","args":{}},
+{"cat":"Action","pid":0,"tid":-1086232704,"ts":22165785,"ph":"B","name":"SetGripper","args":{}},
+{"cat":"Action","pid":0,"tid":-2046839040,"ts":22334802,"ph":"E","name":"SetGripper","args":{}},
+{"cat":"Action","pid":0,"tid":-1086232704,"ts":22334895,"ph":"B","name":"MoveJoints","args":{}},
+{"cat":"Action","pid":0,"tid":-2055231744,"ts":33536806,"ph":"E","name":"MoveJoints","args":{}},
+{"cat":"Action","pid":0,"tid":-1086232704,"ts":33537399,"ph":"B","name":"SetGripper","args":{}},
+{"cat":"Action","pid":0,"tid":-2063624448,"ts":33723557,"ph":"E","name":"SetGripper","args":{}},
+{"cat":"Control","pid":0,"tid":-1086232704,"ts":33724103,"ph":"E","name":"Sequence","args":{}}
+]}

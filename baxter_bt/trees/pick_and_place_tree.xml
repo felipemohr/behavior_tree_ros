@@ -1,12 +1,24 @@
-<root>
-  <BehaviorTree>
-    <Sequence>
-      <MoveJoints commands="0.1 -0.99998 -1.18997 1.94002 0.67 1.03001 -0.5"/>
-      <SetGripper position="0.0"/>
-      <MoveJoints commands="0.0 0.0 0.0 0.0 0.0 0.0 0.0"/>
-      <SetGripper position="100.0"/>
-      <MoveJoints commands="1.0 1.0 1.0 1.0 1.0 1.0 1.0"/>
-      <SetGripper position="0.0"/>
-    </Sequence>
-  </BehaviorTree>
+<?xml version="1.0"?>
+<root main_tree_to_execute="BehaviorTree">
+    <!-- ////////// -->
+    <BehaviorTree ID="BehaviorTree">
+        <Sequence>
+            <Action ID="MoveJoints" commands="0.1 -0.99998 -1.18997 1.94002 0.67 1.03001 -0.5"/>
+            <Action ID="SetGripper" position="0.0"/>
+            <Action ID="MoveJoints" commands="0.0 0.0 0.0 0.0 0.0 0.0 0.0"/>
+            <Action ID="SetGripper" position="100.0"/>
+            <Action ID="MoveJoints" commands="1.0 1.0 1.0 1.0 1.0 1.0 1.0"/>
+            <Action ID="SetGripper" position="0.0"/>
+        </Sequence>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <TreeNodesModel>
+        <Action ID="MoveJoints">
+            <input_port default="0 0 0 0 0 0 0" name="commands">position of each joint</input_port>
+        </Action>
+        <Action ID="SetGripper">
+            <input_port default="0.0" name="position">position of the gripper</input_port>
+        </Action>
+    </TreeNodesModel>
+    <!-- ////////// -->
 </root>
