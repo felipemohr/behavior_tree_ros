@@ -1,7 +1,6 @@
 #include "behaviortree_cpp_v3/bt_factory.h"
 #include "actions_classes.cpp"
 
-
 namespace BT {
   template <> std::vector<double> convertFromString(StringView key) {
 
@@ -12,6 +11,24 @@ namespace BT {
       point.push_back(convertFromString<double>(j));
 
     return point;
+  }
+
+    template <> control_msgs::GripperCommandGoal convertFromString(StringView key) {
+    auto input = BT::splitString(key, ' ');
+
+    control_msgs::GripperCommandGoal cmd;
+    if(input.size() == 1) {
+      cmd.command.position = convertFromString<double>(input[0]); 
+      cmd.command.max_effort = 50.0;
+      return cmd;
+    }
+    else if(input.size() == 2) {
+      cmd.command.position = convertFromString<double>(input[0]); 
+      cmd.command.max_effort = convertFromString<double>(input[1]);
+      return cmd;
+    }
+    else
+      throw RuntimeError("Invalid Input.");
   }
 
 }
@@ -42,7 +59,7 @@ class TrajectoryAction : public BT::AsyncActionNode, public Trajectory {
 
 BT::NodeStatus TrajectoryAction::tick() {
 
-  ROS_INFO("Waiting for action server to start");
+  ROS_INFO("Waiting for Trajectory action server to start");
   if(!client_.waitForServer(ros::Duration(2.0))) {
     ROS_ERROR("Can't contact Trajectory server");
     return BT::NodeStatus::FAILURE;
@@ -69,4 +86,57 @@ BT::NodeStatus TrajectoryAction::tick() {
   ROS_INFO("Trajectory Action finished. ");
   return BT::NodeStatus::SUCCESS;
 
+}
+
+
+
+class GripperAction : public BT::AsyncActionNode, public Gripper {
+
+  public:
+    GripperAction(const std::string &name, const BT::NodeConfiguration &config) 
+      : BT::AsyncActionNode(name, config), Gripper("/robot/end_effector/left_gripper/gripper_action") {
+    }
+
+    static BT::PortsList providedPorts() {
+      return {BT::InputPort<double>("position")};
+    }
+
+    virtual BT::NodeStatus tick() override;
+
+    virtual void halt() override {
+      halt_requested_ = true;
+    }
+
+  private:
+    bool halt_requested_;
+
+};
+
+BT::NodeStatus GripperAction::tick() {
+
+  ROS_INFO("Waiting for Gripper action server to start");
+  if(!client_.waitForServer(ros::Duration(2.0))) {
+    ROS_ERROR("Can't contact Gripper Action server");
+    return BT::NodeStatus::FAILURE;
+  }
+
+  control_msgs::GripperCommandGoal cmd;
+  if(!getInput<control_msgs::GripperCommandGoal>("position", cmd))
+    throw BT::RuntimeError("Missing required input [position]");
+
+  Gripper::setCommand(cmd.command.position, cmd.command.max_effort);
+
+  ROS_INFO("Gripper Action Server started. ");
+  halt_requested_ = false;
+
+  while(!halt_requested_ && !client_.waitForResult(ros::Duration(0.02)) && ros::ok()) {}
+
+  if(halt_requested_) {
+    Gripper::stop();
+    ROS_ERROR("Gripper Action aborted");
+    return BT::NodeStatus::FAILURE;
+  }
+
+  ROS_INFO("Gripper Action finished. ");
+  return BT::NodeStatus::SUCCESS;
 }

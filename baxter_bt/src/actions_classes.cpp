@@ -1,10 +1,13 @@
 #include "ros/ros.h"
 #include "control_msgs/FollowJointTrajectoryAction.h"
+#include "control_msgs/GripperCommandAction.h"
 #include "trajectory_msgs/JointTrajectoryPoint.h"
 #include "actionlib/client/simple_action_client.h"
 
 
 typedef actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> TrajectoryClient;
+typedef actionlib::SimpleActionClient<control_msgs::GripperCommandAction> GripperClient;
+
 
 class Trajectory {
 
@@ -41,7 +44,7 @@ class Trajectory {
 
     void start() {
       goal_.trajectory.header.stamp = ros::Time::now();
-      ROS_INFO("Sending goal to action server.");
+      ROS_INFO("Sending goal to Trajectory action server.");
       client_.sendGoal(goal_);
     }
 
@@ -50,6 +53,36 @@ class Trajectory {
     }
 
     void wait(double timeout=15.0) {
+      client_.waitForResult(ros::Duration(timeout));
+    }
+
+};
+
+
+class Gripper {
+
+  protected:
+    GripperClient client_;
+    control_msgs::GripperCommandGoal goal_;
+
+  public:
+    Gripper (std::string server_name="/robot/end_effector/left_gripper/gripper_action") 
+      : client_(server_name, true) {
+      client_.waitForServer();
+    }
+
+    void setCommand(double position, double effort) {
+      goal_.command.position = position;
+      goal_.command.max_effort = effort;
+      ROS_INFO("Sending goal to Gripper action server.");
+      client_.sendGoal(goal_);
+    }
+
+    void stop() {
+      client_.cancelAllGoals();
+    }
+    
+    void wait(double timeout=5.0) {
       client_.waitForResult(ros::Duration(timeout));
     }
 

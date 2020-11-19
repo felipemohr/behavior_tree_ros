@@ -7,7 +7,8 @@ int main(int argc, char** argv) {
   
   BT::BehaviorTreeFactory factory;
 
-  factory.registerNodeType<TrajectoryAction>("MoveJoint");
+  factory.registerNodeType<TrajectoryAction>("MoveJoints");
+  factory.registerNodeType<GripperAction>("SetGripper");
 
   auto tree = factory.createTreeFromFile("src/behavior_tree_ros/baxter_bt/trees/pick_and_place_tree.xml");
 
