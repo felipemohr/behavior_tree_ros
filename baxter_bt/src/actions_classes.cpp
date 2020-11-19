@@ -3,6 +3,7 @@
 #include "control_msgs/GripperCommandAction.h"
 #include "trajectory_msgs/JointTrajectoryPoint.h"
 #include "actionlib/client/simple_action_client.h"
+#include "baxter_core_msgs/SolvePositionIK.h"
 
 
 typedef actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> TrajectoryClient;
