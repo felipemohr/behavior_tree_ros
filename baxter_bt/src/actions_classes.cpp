@@ -35,7 +35,7 @@ class Trajectory {
 
     }
 
-    void setPoint(std::vector<double> positions, double time) {
+    void setPoint(std::vector<double> positions, double time=7.0) {
       trajectory_msgs::JointTrajectoryPoint point;
       point.positions = positions;
       point.time_from_start = ros::Duration(time);
@@ -55,6 +55,50 @@ class Trajectory {
 
     void wait(double timeout=15.0) {
       client_.waitForResult(ros::Duration(timeout));
+    }
+
+};
+
+
+class IKTrajectory : public Trajectory {
+
+  protected:
+    ros::NodeHandle nh_;
+    ros::ServiceClient service_client_;
+    baxter_core_msgs::SolvePositionIK srv_;
+    geometry_msgs::PoseStamped pose_;
+
+  public:
+    IKTrajectory (std::string service_name="/ExternalTools/left/PositionKinematicsNode/IKService", 
+                  std::string action_name="robot/limb/left/follow_joint_trajectory") 
+      : service_client_(nh_.serviceClient<baxter_core_msgs::SolvePositionIK>(service_name)), 
+        Trajectory(action_name) {
+
+      pose_.header.frame_id = "base";
+      pose_.header.stamp = ros::Time::now();
+
+    }
+
+    bool setPose (geometry_msgs::Pose goal) {
+      pose_.pose = goal;
+      srv_.request.pose_stamp.push_back(pose_);
+      if (service_client_.call(srv_)) {
+        std::vector<double> point;
+        sensor_msgs::JointState js;
+        
+        js = srv_.response.joints[0];
+        for (int p=0; p<js.position.size(); p++) 
+          point.push_back(js.position[p]);
+        
+        ROS_INFO("Joints positions calculated");
+
+        Trajectory::setPoint(point);
+        return true;
+      }
+      else {
+        ROS_ERROR("IK Service failed");
+        return false;
+      }
     }
 
 };
