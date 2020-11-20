@@ -35,7 +35,7 @@ class Trajectory {
 
     }
 
-    void setPoint(std::vector<double> positions, double time=7.0) {
+    void setPoint(std::vector<double> positions, double time=5.0) {
       trajectory_msgs::JointTrajectoryPoint point;
       point.positions = positions;
       point.time_from_start = ros::Duration(time);

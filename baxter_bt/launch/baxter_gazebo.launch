@@ -1,16 +1,14 @@
 <?xml version="1.0"?>
 <launch>
 
-  <include file="$(find baxter_smacha)/launch/baxter_smacha_world.launch" />
-
-  <node pkg="gazebo_ros" type="spawn_model" name="table_spawn" respawn="false" output="screen" 
-  args="-file $(find baxter_sim_examples)/models/cafe_table/model.sdf -sdf -x 1.08 -y -0.15 -model cafe_table" />
-  
-  <node pkg="gazebo_ros" type="spawn_model" name="block_spawn" respawn="false" output="screen" 
-  args="-file $(find baxter_sim_examples)/models/block/model.urdf -urdf -x 0.6725 -y 0.1265 -z 0.7925 -model block" />
+  <!--include file="$(find baxter_smacha)/launch/baxter_smacha_world.launch" /-->
+ 
+  <node pkg="baxter_bt" type="spawn_models.py" name="spawn_models" />
 
   <node pkg="baxter_tools" type="enable_robot.py" name="enable_baxter" args="-e" />
 
   <node pkg="baxter_interface" type="joint_trajectory_action_server.py" name="joint_trajectory_action_server_node" />  
+
+  <node pkg="baxter_interface" type="gripper_action_server.py" name="gripper_action_server_node" />  
 
 </launch>
