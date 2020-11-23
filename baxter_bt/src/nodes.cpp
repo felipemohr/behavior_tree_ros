@@ -72,7 +72,9 @@ class TrajectoryAction : public BT::AsyncActionNode, public Trajectory {
 
   public:
     TrajectoryAction(const std::string &name, const BT::NodeConfiguration &config)
-      : BT::AsyncActionNode(name, config), Trajectory("robot/limb/left/follow_joint_trajectory") {
+      : BT::AsyncActionNode(name, config), Trajectory("robot/limb/left/follow_joint_trajectory", 
+                   "/ExternalTools/left/PositionKinematicsNode/IKService", 
+                   "robot/limb/left/follow_joint_trajectory") {
     }
 
     static BT::PortsList providedPorts() {
@@ -122,13 +124,14 @@ BT::NodeStatus TrajectoryAction::tick() {
 }
 
 
-class IKTrajectoryAction : public BT::AsyncActionNode, public IKTrajectory {
+class IKTrajectoryAction : public BT::AsyncActionNode, public Trajectory {
 
   public:
     IKTrajectoryAction(const std::string &name, const BT::NodeConfiguration &config)
       : BT::AsyncActionNode(name, config), 
-        IKTrajectory("/ExternalTools/left/PositionKinematicsNode/IKService", 
-                     "robot/limb/left/follow_joint_trajectory") {
+        Trajectory("robot/limb/left/follow_joint_trajectory", 
+                   "/ExternalTools/left/PositionKinematicsNode/IKService", 
+                   "robot/limb/left/follow_joint_trajectory") {
     }
 
     static BT::PortsList providedPorts() {
@@ -157,8 +160,8 @@ BT::NodeStatus IKTrajectoryAction::tick() {
   if(!getInput<geometry_msgs::Pose>("pose", pose))
     throw BT::RuntimeError("Missing required input [pose]");
 
-  IKTrajectory::setPose(pose);
-  IKTrajectory::start();
+  setPose(pose);
+  start();
 
   ROS_INFO("Trajectory Action IK Server started. ");
   halt_requested_ = false;
@@ -166,7 +169,7 @@ BT::NodeStatus IKTrajectoryAction::tick() {
   while(!halt_requested_ && !client_.waitForResult(ros::Duration(0.02)) && ros::ok()) {}
 
   if(halt_requested_) {
-    IKTrajectory::stop();
+    stop();
     ROS_ERROR("Trajectory Action IK aborted");
     return BT::NodeStatus::FAILURE;
   }
@@ -202,7 +205,7 @@ class GripperAction : public BT::AsyncActionNode, public Gripper {
 BT::NodeStatus GripperAction::tick() {
 
   ROS_INFO("Waiting for Gripper action server to start");
-  if(!client_.waitForServer(ros::Duration(2.0))) {
+  if(!gripper_client_.waitForServer(ros::Duration(2.0))) {
     ROS_ERROR("Can't contact Gripper Action server");
     return BT::NodeStatus::FAILURE;
   }
@@ -216,7 +219,7 @@ BT::NodeStatus GripperAction::tick() {
   ROS_INFO("Gripper Action Server started. ");
   halt_requested_ = false;
 
-  while(!halt_requested_ && !client_.waitForResult(ros::Duration(0.02)) && ros::ok()) {}
+  while(!halt_requested_ && !gripper_client_.waitForResult(ros::Duration(0.02)) && ros::ok()) {}
 
   if(halt_requested_) {
     Gripper::stop();
