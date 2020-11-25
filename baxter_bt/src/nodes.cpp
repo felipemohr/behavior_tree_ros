@@ -64,15 +64,14 @@ namespace BT {
     else
       throw RuntimeError("Invalid Input.");
   }
-
 }
 
 
-class TrajectoryAction : public BT::AsyncActionNode, public Trajectory {
+class MoveJointsActionNode : public BT::AsyncActionNode, public BaxterArm {
 
   public:
-    TrajectoryAction(const std::string &name, const BT::NodeConfiguration &config)
-      : BT::AsyncActionNode(name, config), Trajectory("robot/limb/left/follow_joint_trajectory", 
+    MoveJointsActionNode(const std::string &name, const BT::NodeConfiguration &config)
+      : BT::AsyncActionNode(name, config), BaxterArm("robot/limb/left/follow_joint_trajectory", 
                    "/ExternalTools/left/PositionKinematicsNode/IKService", 
                    "robot/limb/left/follow_joint_trajectory") {
     }
@@ -92,10 +91,10 @@ class TrajectoryAction : public BT::AsyncActionNode, public Trajectory {
 
 };
 
-BT::NodeStatus TrajectoryAction::tick() {
+BT::NodeStatus MoveJointsActionNode::tick() {
 
   ROS_INFO("Waiting for Trajectory action server to start");
-  if(!client_.waitForServer(ros::Duration(2.0))) {
+  if(!traj_client_.waitForServer(ros::Duration(2.0))) {
     ROS_ERROR("Can't contact Trajectory server");
     return BT::NodeStatus::FAILURE;
   }
@@ -104,16 +103,16 @@ BT::NodeStatus TrajectoryAction::tick() {
   if(!getInput< std::vector<double> >("commands", point))
     throw BT::RuntimeError("Missing required input [commands]");
 
-  Trajectory::setPoint(point, 7.0);
-  Trajectory::start();
+  BaxterArm::setJoints(point, 7.0);
+  BaxterArm::moveJoints();
 
   ROS_INFO("Trajectory Action Server started. ");
   halt_requested_ = false;
 
-  while(!halt_requested_ && !client_.waitForResult(ros::Duration(0.02)) && ros::ok()) {}
+  while(!halt_requested_ && !traj_client_.waitForResult(ros::Duration(0.02)) && ros::ok()) {}
 
   if(halt_requested_) {
-    Trajectory::stop();
+    BaxterArm::stop();
     ROS_ERROR("Trajectory Action aborted");
     return BT::NodeStatus::FAILURE; 
   }
@@ -124,14 +123,15 @@ BT::NodeStatus TrajectoryAction::tick() {
 }
 
 
-class IKTrajectoryAction : public BT::AsyncActionNode, public Trajectory {
+class MoveToPoseActionNode : public BT::AsyncActionNode, public BaxterArm {
 
   public:
-    IKTrajectoryAction(const std::string &name, const BT::NodeConfiguration &config)
+    MoveToPoseActionNode(const std::string &name, const BT::NodeConfiguration &config)
       : BT::AsyncActionNode(name, config), 
-        Trajectory("robot/limb/left/follow_joint_trajectory", 
-                   "/ExternalTools/left/PositionKinematicsNode/IKService", 
-                   "robot/limb/left/follow_joint_trajectory") {
+        BaxterArm("robot/limb/left/follow_joint_trajectory",
+                  "/ExternalTools/left/PositionKinematicsNode/IKService",
+                  "robot/limb/left/follow_joint_trajectory",
+                  "/robot/end_effector/left_gripper/gripper_action") {
     }
 
     static BT::PortsList providedPorts() {
@@ -149,9 +149,9 @@ class IKTrajectoryAction : public BT::AsyncActionNode, public Trajectory {
 
 };
 
-BT::NodeStatus IKTrajectoryAction::tick() {
+BT::NodeStatus MoveToPoseActionNode::tick() {
   ROS_INFO("Waiting for Trajectory action server to start");
-  if(!client_.waitForServer(ros::Duration(2.0))) {
+  if(!traj_client_.waitForServer(ros::Duration(2.0))) {
     ROS_ERROR("Can't contact Trajectory server");
     return BT::NodeStatus::FAILURE;
   }
@@ -161,12 +161,12 @@ BT::NodeStatus IKTrajectoryAction::tick() {
     throw BT::RuntimeError("Missing required input [pose]");
 
   setPose(pose);
-  start();
+  moveJoints();
 
   ROS_INFO("Trajectory Action IK Server started. ");
   halt_requested_ = false;
 
-  while(!halt_requested_ && !client_.waitForResult(ros::Duration(0.02)) && ros::ok()) {}
+  while(!halt_requested_ && !traj_client_.waitForResult(ros::Duration(0.02)) && ros::ok()) {}
 
   if(halt_requested_) {
     stop();
@@ -180,11 +180,15 @@ BT::NodeStatus IKTrajectoryAction::tick() {
 }
 
 
-class GripperAction : public BT::AsyncActionNode, public Gripper {
+class SetGripperActionNode : public BT::AsyncActionNode, public BaxterArm {
 
   public:
-    GripperAction(const std::string &name, const BT::NodeConfiguration &config) 
-      : BT::AsyncActionNode(name, config), Gripper("/robot/end_effector/left_gripper/gripper_action") {
+    SetGripperActionNode(const std::string &name, const BT::NodeConfiguration &config) 
+      : BT::AsyncActionNode(name, config), 
+        BaxterArm("robot/limb/left/follow_joint_trajectory",
+                  "/ExternalTools/left/PositionKinematicsNode/IKService",
+                  "robot/limb/left/follow_joint_trajectory",
+                  "/robot/end_effector/left_gripper/gripper_action") {
     }
 
     static BT::PortsList providedPorts() {
@@ -202,7 +206,7 @@ class GripperAction : public BT::AsyncActionNode, public Gripper {
 
 };
 
-BT::NodeStatus GripperAction::tick() {
+BT::NodeStatus SetGripperActionNode::tick() {
 
   ROS_INFO("Waiting for Gripper action server to start");
   if(!gripper_client_.waitForServer(ros::Duration(2.0))) {
@@ -214,7 +218,7 @@ BT::NodeStatus GripperAction::tick() {
   if(!getInput<control_msgs::GripperCommandGoal>("position", cmd))
     throw BT::RuntimeError("Missing required input [position]");
 
-  Gripper::setCommand(cmd.command.position, cmd.command.max_effort);
+  BaxterArm::setGripper(cmd.command.position, cmd.command.max_effort);
 
   ROS_INFO("Gripper Action Server started. ");
   halt_requested_ = false;
@@ -222,7 +226,7 @@ BT::NodeStatus GripperAction::tick() {
   while(!halt_requested_ && !gripper_client_.waitForResult(ros::Duration(0.02)) && ros::ok()) {}
 
   if(halt_requested_) {
-    Gripper::stop();
+    BaxterArm::stopGripper();
     ROS_ERROR("Gripper Action aborted");
     return BT::NodeStatus::FAILURE;
   }
