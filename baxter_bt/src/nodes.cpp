@@ -71,9 +71,12 @@ class MoveJointsActionNode : public BT::AsyncActionNode, public BaxterArm {
 
   public:
     MoveJointsActionNode(const std::string &name, const BT::NodeConfiguration &config)
-      : BT::AsyncActionNode(name, config), BaxterArm("robot/limb/left/follow_joint_trajectory", 
-                   "/ExternalTools/left/PositionKinematicsNode/IKService", 
-                   "robot/limb/left/follow_joint_trajectory") {
+      : BT::AsyncActionNode(name, config), 
+        BaxterArm("/robot/limb/left/endpoint_state",
+                  "robot/limb/left/follow_joint_trajectory", 
+                  "/ExternalTools/left/PositionKinematicsNode/IKService", 
+                  "robot/limb/left/follow_joint_trajectory",
+                  "/robot/end_effector/left_gripper/gripper_action") {
     }
 
     static BT::PortsList providedPorts() {
@@ -128,7 +131,8 @@ class MoveToPoseActionNode : public BT::AsyncActionNode, public BaxterArm {
   public:
     MoveToPoseActionNode(const std::string &name, const BT::NodeConfiguration &config)
       : BT::AsyncActionNode(name, config), 
-        BaxterArm("robot/limb/left/follow_joint_trajectory",
+        BaxterArm("/robot/limb/left/endpoint_state",
+                  "robot/limb/left/follow_joint_trajectory",
                   "/ExternalTools/left/PositionKinematicsNode/IKService",
                   "robot/limb/left/follow_joint_trajectory",
                   "/robot/end_effector/left_gripper/gripper_action") {
@@ -185,7 +189,8 @@ class SetGripperActionNode : public BT::AsyncActionNode, public BaxterArm {
   public:
     SetGripperActionNode(const std::string &name, const BT::NodeConfiguration &config) 
       : BT::AsyncActionNode(name, config), 
-        BaxterArm("robot/limb/left/follow_joint_trajectory",
+        BaxterArm("/robot/limb/left/endpoint_state",
+                  "robot/limb/left/follow_joint_trajectory",
                   "/ExternalTools/left/PositionKinematicsNode/IKService",
                   "robot/limb/left/follow_joint_trajectory",
                   "/robot/end_effector/left_gripper/gripper_action") {
