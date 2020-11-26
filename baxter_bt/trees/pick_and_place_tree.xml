@@ -5,17 +5,25 @@
         <Sequence name="Pick_and_Place">
             <Action ID="MoveJoints" commands="0.1 -1.49998 -1.18997 1.94002 0.67 1.03001 -0.5" name="Move_To_Start_Position"/>
             <Sequence name="Pick_Block">
-                <Action ID="MoveToPose" name="Move_To_Pick_Block_Hove_Pose" pose="0.7 0.158 0.021 -0.02496 0.99965 0.00738 0.00486"/>
-                <Action ID="SetGripper" name="Open_Gripper" position="100.0"/>
-                <Action ID="MoveToPose" name="Move_To_Pick_Block_Gripper_Pose" pose="0.7 0.158 -0.129 -0.02496 0.99965 0.00738 0.00486"/>
-                <Action ID="SetGripper" name="Close_Gripper" position="70.0"/>
-                <Action ID="MoveToPose" name="Move_To_Picked_Block_Hove_Pose" pose="0.7 0.158 -0.021 -0.02496 0.99965 0.00738 0.00486"/>
+                <SetBlackboard name="IK_Pick_Block_Hover_Position" output_key="pick_hove_position" value="0.7 0.158 0.021"/>
+                <SetBlackboard name="IK_Pick_Block_Hover_Orientation" output_key="pick_hove_orientation" value="-0.02496 0.99965 0.00738 0.00486"/>
+                <Action ID="MoveToPose" name="Move_To_Pick_Block_Hovre_Pose" position="{pick_hove_position}" orientation="{pick_hove_orientation}"/>
+                <Action ID="SetGripper" name="Open_Gripper" command="open"/>
+                <SetBlackboard name="IK_Pick_Block_Grip_Position" output_key="pick_gripper_position" value="0.7 0.158 -0.129"/>
+                <SetBlackboard name="IK_Pick_Block_Grip_Orientation" output_key="pick_gripper_orientation" value="-0.02496 0.99965 0.00738 0.00486"/>
+                <Action ID="MoveToPose" name="Move_To_Pick_Block_Grip_Pose" position="{pick_gripper_position}" orientation="{pick_gripper_orientation}"/>
+                <Action ID="SetGripper" name="Close_Gripper" position="70"/>
+                <Action ID="MoveToPose" name="Move_To_Gripped_Block_Hover_Pose" position="0.7 0.158 -0.021" orientation="-0.02496 0.99965 0.00738 0.00486"/>
             </Sequence>
             <Sequence name="Place_Block">
-                <Action ID="MoveToPose" name="Move_To_Place_Block_Hove_Pose" pose="0.75 -0.05 -0.021 -0.02496 0.99965 0.00738 0.00486"/>
-                <Action ID="MoveToPose" name="Move_To_Place_Block_Grip_Pose" pose="0.75 -0.05 -0.129 -0.02496 0.99965 0.00738 0.00486"/>
-                <Action ID="SetGripper" name="Open_Gripper" position="100.0"/>
-                <Action ID="MoveToPose" name="Move_To_Relased_Block_Hove_Pose" pose="0.75 -0.05 -0.021 -0.02496 0.99965 0.00738 0.00486"/>
+                <SetBlackboard name="IK_Place_Block_Hover_Position" output_key="place_hover_position" value="0.75 -0.05 -0.021"/>
+                <SetBlackboard name="IK_Place_Block_Hover_Orientation" output_key="place_hover_orientation" value="-0.02496 0.99965 0.00738 0.00486"/>
+                <Action ID="MoveToPose" name="Move_To_Place_Block_Hove_Pose" position="{place_hover_position}" orientation="{place_hover_orientation}"/>
+                <SetBlackboard name="IK_Place_Block_Release_Pose" output_key="place_release_position" value="0.75 -0.05 -0.129"/>
+                <SetBlackboard name="IK_Place_Block_Release_Pose" output_key="place_release_orientation" value="-0.02496 0.99965 0.00738 0.00486"/>
+                <Action ID="MoveToPose" name="Move_To_Place_Block_Grip_Pose" position="{place_release_position}" orientation="{place_release_orientation}"/>
+                <Action ID="SetGripper" name="Open_Gripper" command="open"/>
+                <Action ID="MoveToPose" name="Move_To_Relased_Block_Hove_Pose" position="0.75 -0.05 -0.021" orientation="-0.02496 0.99965 0.00738 0.00486"/>
             </Sequence>
         </Sequence>
     </BehaviorTree>
@@ -25,12 +33,13 @@
             <input_port default="0 0 0 0 0 0 0" name="commands">position of each joint</input_port>
         </Action>
         <Action ID="MoveToPose">
-            <input_port default="0 0 0 0 0 0 1" name="pose"/>
+            <input_port default="0 0 0" name="position">IK position</input_port>/>
+            <input_port default="0 0 0 1" name="orientation">IK orientation</input_port>/>
         </Action>
         <Action ID="SetGripper">
             <input_port default="0.0" name="position">position of the gripper</input_port>
+            <input_port default="open" name="command">open or close gripper</input_port>
         </Action>
     </TreeNodesModel>
     <!-- ////////// -->
 </root>
-

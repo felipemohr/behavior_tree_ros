@@ -1,4 +1,6 @@
 #include "ros/ros.h"
+#include "geometry_msgs/Pose.h"
+#include "geometry_msgs/PoseStamped.h"
 #include "control_msgs/FollowJointTrajectoryAction.h"
 #include "control_msgs/GripperCommandAction.h"
 #include "trajectory_msgs/JointTrajectoryPoint.h"
@@ -32,28 +34,27 @@ class BaxterArm {
 
   
   public:
-    BaxterArm ( std::string gripper_pose_topic = "/robot/limb/left/endpoint_state",
-                std::string server_name="robot/limb/left/follow_joint_trajectory",
-                std::string service_name="/ExternalTools/left/PositionKinematicsNode/IKService",
-                std::string action_name="robot/limb/left/follow_joint_trajectory",
-                std::string gripper_server_name="/robot/end_effector/left_gripper/gripper_action" ) 
-      : pose_sub_(nh_.subscribe(gripper_pose_topic, 10, &BaxterArm::gripperPoseCallback, this)),
-        traj_client_(server_name, true), 
-        gripper_client_(gripper_server_name, true),
-        ik_service_client_(nh_.serviceClient<baxter_core_msgs::SolvePositionIK>(service_name)) {
+    BaxterArm ( std::string limb = "left" ) 
+      : pose_sub_(nh_.subscribe("/robot/limb/"+limb+"/endpoint_state", 10, &BaxterArm::gripperPoseCallback, this)),
+        traj_client_("robot/limb/"+limb+"/follow_joint_trajectory", true), 
+        gripper_client_("/robot/end_effector/"+limb+"_gripper/gripper_action", true),
+        ik_service_client_(nh_.serviceClient<baxter_core_msgs::SolvePositionIK>("/ExternalTools/"+limb+"/PositionKinematicsNode/IKService")) {
+
+      if ((limb != "left") && (limb != "right"))
+        ROS_WARN("By default, 'limb' parameter in BaxterArm constructor must be 'left' or 'right'");
 
       traj_client_.waitForServer();
       gripper_client_.waitForServer();
 
       joints_goal_.goal_time_tolerance = ros::Duration(0.1);
 
-      joints_goal_.trajectory.joint_names.push_back("left_s0");
-      joints_goal_.trajectory.joint_names.push_back("left_s1");
-      joints_goal_.trajectory.joint_names.push_back("left_e0");
-      joints_goal_.trajectory.joint_names.push_back("left_e1");
-      joints_goal_.trajectory.joint_names.push_back("left_w0");
-      joints_goal_.trajectory.joint_names.push_back("left_w1");
-      joints_goal_.trajectory.joint_names.push_back("left_w2");
+      joints_goal_.trajectory.joint_names.push_back(limb+"_s0");
+      joints_goal_.trajectory.joint_names.push_back(limb+"_s1");
+      joints_goal_.trajectory.joint_names.push_back(limb+"_e0");
+      joints_goal_.trajectory.joint_names.push_back(limb+"_e1");
+      joints_goal_.trajectory.joint_names.push_back(limb+"_w0");
+      joints_goal_.trajectory.joint_names.push_back(limb+"_w1");
+      joints_goal_.trajectory.joint_names.push_back(limb+"_w2");
 
       pose_goal_.header.frame_id = "base";
       pose_goal_.header.stamp = ros::Time::now();

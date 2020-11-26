@@ -52,12 +52,18 @@
   <build_depend>actionlib</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>behaviortree_cpp_v3</build_depend>
+  <build_depend>smach</build_depend>
+  <build_depend>smach_viewer</build_depend>
   <build_export_depend>actionlib</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>behaviortree_cpp_v3</build_export_depend>
+  <build_export_depend>smach</build_export_depend>
+  <build_export_depend>smach_viewer</build_export_depend>
   <exec_depend>actionlib</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>behaviortree_cpp_v3</exec_depend>
+  <exec_depend>smach</exec_depend>
+  <exec_depend>smach_viewer</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

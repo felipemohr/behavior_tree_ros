@@ -17,29 +17,32 @@ namespace BT {
   }
 
 
-  template <> geometry_msgs::Pose convertFromString(StringView key) {
+  template <> geometry_msgs::Point convertFromString(StringView key) {
     auto input = BT::splitString(key, ' ');
 
-    geometry_msgs::Pose pose;
+    geometry_msgs::Point position;
     if(input.size() == 3) {
-      pose.position.x = convertFromString<double>(input[0]);
-      pose.position.y = convertFromString<double>(input[1]);
-      pose.position.z = convertFromString<double>(input[2]);
-      pose.orientation.x = 0;
-      pose.orientation.y = 0;
-      pose.orientation.z = 0;
-      pose.orientation.w = 1;
-      return pose;
+      position.x = convertFromString<double>(input[0]);
+      position.y = convertFromString<double>(input[1]);
+      position.z = convertFromString<double>(input[2]);
+      return position;
     }
-    else if(input.size() == 7) {
-      pose.position.x = convertFromString<double>(input[0]);
-      pose.position.y = convertFromString<double>(input[1]);
-      pose.position.z = convertFromString<double>(input[2]);
-      pose.orientation.x = convertFromString<double>(input[3]);
-      pose.orientation.y = convertFromString<double>(input[4]);
-      pose.orientation.z = convertFromString<double>(input[5]);
-      pose.orientation.w = convertFromString<double>(input[6]);
-      return pose;
+    else {
+      throw RuntimeError("Invalid Input.");
+    }
+  }
+
+
+  template <> geometry_msgs::Quaternion convertFromString(StringView key) {
+    auto input = BT::splitString(key, ' ');
+
+    geometry_msgs::Quaternion orientation;
+    if(input.size() == 4) {
+      orientation.x = convertFromString<double>(input[0]);
+      orientation.y = convertFromString<double>(input[1]);
+      orientation.z = convertFromString<double>(input[2]);
+      orientation.w = convertFromString<double>(input[3]);
+      return orientation;
     }
     else {
       throw RuntimeError("Invalid Input.");
@@ -72,11 +75,7 @@ class MoveJointsActionNode : public BT::AsyncActionNode, public BaxterArm {
   public:
     MoveJointsActionNode(const std::string &name, const BT::NodeConfiguration &config)
       : BT::AsyncActionNode(name, config), 
-        BaxterArm("/robot/limb/left/endpoint_state",
-                  "robot/limb/left/follow_joint_trajectory", 
-                  "/ExternalTools/left/PositionKinematicsNode/IKService", 
-                  "robot/limb/left/follow_joint_trajectory",
-                  "/robot/end_effector/left_gripper/gripper_action") {
+        BaxterArm("left") {
     }
 
     static BT::PortsList providedPorts() {
@@ -131,15 +130,12 @@ class MoveToPoseActionNode : public BT::AsyncActionNode, public BaxterArm {
   public:
     MoveToPoseActionNode(const std::string &name, const BT::NodeConfiguration &config)
       : BT::AsyncActionNode(name, config), 
-        BaxterArm("/robot/limb/left/endpoint_state",
-                  "robot/limb/left/follow_joint_trajectory",
-                  "/ExternalTools/left/PositionKinematicsNode/IKService",
-                  "robot/limb/left/follow_joint_trajectory",
-                  "/robot/end_effector/left_gripper/gripper_action") {
+        BaxterArm("left") {
     }
 
     static BT::PortsList providedPorts() {
-      return {BT::InputPort<geometry_msgs::Pose>("pose")};
+      return {BT::InputPort<geometry_msgs::Point>("position"),
+              BT::InputPort<geometry_msgs::Quaternion>("orientation")};
     }
 
     virtual BT::NodeStatus tick() override;
@@ -161,8 +157,10 @@ BT::NodeStatus MoveToPoseActionNode::tick() {
   }
 
   geometry_msgs::Pose pose;
-  if(!getInput<geometry_msgs::Pose>("pose", pose))
-    throw BT::RuntimeError("Missing required input [pose]");
+  if(!getInput<geometry_msgs::Point>("position", pose.position))
+    throw BT::RuntimeError("Missing required input [position]");
+  if(!getInput<geometry_msgs::Quaternion>("orientation", pose.orientation))
+    throw BT::RuntimeError("Missing required input [orientation]");
 
   setPose(pose);
   moveJoints();
@@ -189,15 +187,12 @@ class SetGripperActionNode : public BT::AsyncActionNode, public BaxterArm {
   public:
     SetGripperActionNode(const std::string &name, const BT::NodeConfiguration &config) 
       : BT::AsyncActionNode(name, config), 
-        BaxterArm("/robot/limb/left/endpoint_state",
-                  "robot/limb/left/follow_joint_trajectory",
-                  "/ExternalTools/left/PositionKinematicsNode/IKService",
-                  "robot/limb/left/follow_joint_trajectory",
-                  "/robot/end_effector/left_gripper/gripper_action") {
+        BaxterArm("left") {
     }
 
     static BT::PortsList providedPorts() {
-      return {BT::InputPort<double>("position")};
+      return {BT::InputPort<std::string>("command"), 
+              BT::InputPort<double>("position")};
     }
 
     virtual BT::NodeStatus tick() override;
@@ -219,11 +214,24 @@ BT::NodeStatus SetGripperActionNode::tick() {
     return BT::NodeStatus::FAILURE;
   }
 
-  control_msgs::GripperCommandGoal cmd;
-  if(!getInput<control_msgs::GripperCommandGoal>("position", cmd))
-    throw BT::RuntimeError("Missing required input [position]");
+  std::string cmd;
+  if(getInput<std::string>("command", cmd)) {
+    if (cmd=="open")
+      BaxterArm::setGripper(100, 50);
+    else if (cmd=="close")
+      BaxterArm::setGripper(0, 50);
+    else
+      throw BT::RuntimeError("Invalid [command] input in SetGripper Action");
+  }
 
-  BaxterArm::setGripper(cmd.command.position, cmd.command.max_effort);
+  else{
+    control_msgs::GripperCommandGoal cmd_pos;
+    if(!getInput<control_msgs::GripperCommandGoal>("position", cmd_pos)){
+      throw BT::RuntimeError("Missing required input [position]");
+    }
+
+    BaxterArm::setGripper(cmd_pos.command.position, cmd_pos.command.max_effort);
+  }
 
   ROS_INFO("Gripper Action Server started. ");
   halt_requested_ = false;
