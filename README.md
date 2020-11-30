@@ -1,7 +1,8 @@
 # behavior_tree_ros
 
-Este repositório traz um exemplo de implementação
-Para mais informações sobre a BT, acesse o repositório [behavior_tree_ros](https://github.com/felipe18mohr/behavior_tree_ros)
+Este repositório traz um exemplo de implementação de uma Behavior Tree aplicada ao ROS (Robot Operating System), comparando-a a um exemplo funcional de Pick and Place com o robô Baxter, programado utilizando Finite State Machine (FSM).
+
+Para mais informações sobre BT, acesse o repositório [behavior_tree_ros](https://github.com/felipe18mohr/behavior_tree_ros)
 ## Instalando pacotes e dependências
 #### Behavior Tree
 Instale algumas dependências:
