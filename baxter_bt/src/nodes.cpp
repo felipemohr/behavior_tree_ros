@@ -1,4 +1,4 @@
-#include "actions_classes.cpp"
+#include "baxter_class.cpp"
 #include "behaviortree_cpp_v3/bt_factory.h"
 #include "behaviortree_cpp_v3/loggers/bt_cout_logger.h"
 #include "behaviortree_cpp_v3/loggers/bt_file_logger.h"
@@ -16,7 +16,6 @@ namespace BT {
     return point;
   }
 
-
   template <> geometry_msgs::Point convertFromString(StringView key) {
     auto input = BT::splitString(key, ' ');
 
@@ -31,7 +30,6 @@ namespace BT {
       throw RuntimeError("Invalid Input.");
     }
   }
-
 
   template <> geometry_msgs::Quaternion convertFromString(StringView key) {
     auto input = BT::splitString(key, ' ');
@@ -48,7 +46,6 @@ namespace BT {
       throw RuntimeError("Invalid Input.");
     }
   }
-
 
   template <> control_msgs::GripperCommandGoal convertFromString(StringView key) {
     auto input = BT::splitString(key, ' ');

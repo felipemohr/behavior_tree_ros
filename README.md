@@ -1,5 +1,7 @@
 # behavior_tree_ros
 
+Este repositório traz um exemplo de implementação
+Para mais informações sobre a BT, acesse o repositório [behavior_tree_ros](https://github.com/felipe18mohr/behavior_tree_ros)
 ## Instalando pacotes e dependências
 #### Behavior Tree
 Instale algumas dependências:
@@ -76,6 +78,8 @@ cd .. && catkin build
 ## Simulando o robô Baxter
 ### Baxter pick-and-place com FSM
 
+O código para simulação do Baxter foi retirado do repositório [baxter_smacha](https://github.com/abr-ijs/baxter_smacha)
+
 Quando abrir um novo terminal:
 ```
 cd catkin_ws
@@ -119,4 +123,28 @@ cd
 ![Baxter pick-and-place com FSM.](/img/groot.jpeg "Baxter pick-and-place com FSM.")
 
 Clique em "Monitor" e em "Start", para monitorar o funcionamento da BT.
+
 ![BT Tree.](/img/baxter_tree.jpeg "BT Tree.")
+
+
+### Funcionamento baxter_bt
+
+Há três arquivos principais que compõem o projeto, contidos na pasta */src*:
+
+- **pick_and_place_bt.cpp:** Esse é o código principal. Nele, importamos as classes criadas, criamos a Árvore de Comportamento, registramos os Nós Folhas (a árvore é criada e sua estrutura é montada a partir de um arquivo XML, gerada de forma visual pelo Groot) e executamos o "tick" no root da Árvore, que será propagado para os Nós filhos, até que seja retornado SUCCCESS ou FAILURE, além de adicionar algumas opções de log.
+  
+- **baxter_class.cpp:** Possui a implementação de uma Classe para o controle do robô, através do ROS. Uma forma de se utilizar Behavior Trees em conjunto com o ROS é fazendo uso das  ROS Actions (da biblioteca actionlib). Isso porque, assim com as ROS Actions, muitos ActionNodes utilizados pela BT são assíncronos. 
+  
+  Porém, a aplicação não se limita a isso, é possível implementar o que se queira relacionado a ROS dentro de uma BT: em um dos métodos da classe, por exemplo, é utilizado um ROS Service, que calcula as posições de cada junta do robô através de Cinemática Inversa. Em outro, há um ROS Subscriber que retorna a posição no espaço que se encontra o gripper. 
+  
+  Note que, nessa classe criada, não há absolutamente nada relacionado a BT, tornando-a uma classe genérica, podendo ser utilizada em outras aplicações, mesmo que sem uso de Behavior Trees.
+  
+- **nodes.cpp:** É nesse arquivo que são criados todos os ActionNodes (e ConditionNodes, se fossem necessários). Existem diversas formas de se criar os Nodes de uma BT, nesse caso eles foram criados a partir de uma Herança Múltipla, herdando tanto a classe de Action da BT quanto a classe criada para o controle do robô, unindo os dois mundos. Note que foi criada uma classe para cada um dos Nodes, de forma que no arquivo principal (*pic_and_place_bt.cpp*) eles possam ser registrados de maneira mais simples e genérica.
+
+  Além disso, é nesse arquivo que estão também todos os templates de Conversão de String, necessários para ler os valores de Entrada da Árvore. Esses Inputs serão retornados pelo método providedPorts() de cada ActionNode (não foram utilizadas portas de Output nesse exemplo).
+
+  O método tick() existe dentro da classe do ActionNode herdada, e deve ser sobrescrito dentro de cada uma das novas classes criadas. É ele que será executado quando o ActionNode receber um "tick". Como os ActionNodes criados são Assíncronos, será criada uma nova thread quando esse Node receber o primeiro tick, e ele retornará o NodeStatus RUNNING. Quando o Node receber um tick novamente, ele continuará retornando RUNNING, enquanto a thread ainda estiver rodando. 
+
+  Assim como o método tick(), o método halt() é sobrescrito dentro de cada classe, e é chamado automaticamente pela biblioteca caso ocorra algo que deva interromper a execução do Node.
+
+Note que essa é apenas uma forma de se implementar uma Behavior Tree em conjunto com o ROS. Não há nenhuma regra que especifique exatamente como isso deve ser feito, tornando as coisas bastante flexíveis.
